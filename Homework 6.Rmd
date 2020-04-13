@@ -23,29 +23,17 @@ It seems interesting that many of the variables appear to be a factored response
 
 **2.**
 ```{r}
-missing.hands <- (school$Handed == "")
+missing.hands <- is.na(school$Handed)
 sum(missing.hands)
-missing.season <- (school$Favorite_Season == "")
+missing.season <- is.na(school$Favorite_Season)
 sum(missing.season == "TRUE")
 
 school.ew <- school
 
+take.em.out <- (missing.hands == TRUE | missing.season == TRUE)
+
 school.ew <- school[take.em.out == FALSE,]
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 The missing values of these variables has been removed. Doing so would most likely cause issues, since 10% of the data is missing for favorite season, whereas only 2% is missing for handedness. So though in total only 10% of the data was removed (since some of the results removed may have had both values missing), that's still a decent portion of the data that is missing. However, since we are testing for independence, missing data isn't going to exactly provide much information (you need both pieces there to test for independence between the two variables) so removing the missing observations here shouldn't be too terrible, but there are definitely better ways to deal with this missing data.
@@ -128,10 +116,10 @@ se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm)
 }
 
 M<-5
-combined.betas <- apply(do.call(rbind,betaList),2,mean)
+combined.betas <- apply(do.call(rbind,beta),2,mean)
 
-(B<-apply(do.call(rbind,betaList),2,var))
-(W<-apply(do.call(rbind,seList)^2,2,mean))
+B<-apply(do.call(rbind,beta),2,var)
+W<-apply(do.call(rbind,se)^2,2,mean)
 
 T<-(1+1/M)*B + W
 combined.se <- sqrt(T)
@@ -154,10 +142,10 @@ se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm)
 }
 
 M<-5
-combined.betas <- apply(do.call(rbind,betaList),2,mean)
+combined.betas <- apply(do.call(rbind,beta),2,mean)
 
-B<-apply(do.call(rbind,betaList),2,var)
-W<-apply(do.call(rbind,seList)^2,2,mean)
+B<-apply(do.call(rbind,beta),2,var)
+W<-apply(do.call(rbind,se)^2,2,mean)
 
 T<-(1+1/M)*B + W
 combined.se <- sqrt(T)
