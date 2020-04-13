@@ -60,7 +60,7 @@ So there seems to be a moderately appropriate number of observations in each cel
 chisq.test(school.ew$Handed,school.ew$Favorite_Season)
 ```
 
-Given the p-value of this test, we fail to reject the null hypothesis. There is not sufficient evidence that Handedness and Favorite Season are independent.
+Given the p-value of this test, we fail to reject the null hypothesis. There is not sufficient evidence that Handedness and Favorite Season are dependent.
 
 
 
@@ -108,52 +108,33 @@ relevant.predictors <- as.matrix(data.frame(school$Height_cm, school$Armspan_cm,
 
 rats <- mice(relevant.predictors, m = 5, method = "cart")
 
-beta <- list()
-se <- list()
-for (i in 1:5){
-beta[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,1]
-se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,2]
-}
+someImps <- with(rats, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
 
-M<-5
-combined.betas <- apply(do.call(rbind,beta),2,mean)
+billiards <- pool(someImps)
+billiards
 
-B<-apply(do.call(rbind,beta),2,var)
-W<-apply(do.call(rbind,se)^2,2,mean)
+betas <- c(22.7178994,0.5612166)
+t <- c(5.969260382,0.001148791)
+se <- sqrt(t)
 
-T<-(1+1/M)*B + W
-combined.se <- sqrt(T)
-
-print("So the beta values are")
-combined.betas
-print("with standard errors of")
-combined.se
+cat("So the beta values are",betas[1],"and", betas[2],"with standard errors of",se[1],"and",se[2],"respectively")
 ```
 
 **4.**
 ```{r}
 rats2 <- mice(relevant.predictors, m = 5, method = "rf")
 
-beta <- list()
-se <- list()
-for (i in 1:5){
-beta[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,1]
-se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,2]
-}
+someImps2 <- with(rats2, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
+billiards2 <- pool(someImps2)
+billiards2
 
-M<-5
-combined.betas <- apply(do.call(rbind,beta),2,mean)
+betas2 <- c(24.229083,0.538372)
+t2 <- c(6.533615322,0.001386197)
+se2 <- sqrt(t2)
+se2
 
-B<-apply(do.call(rbind,beta),2,var)
-W<-apply(do.call(rbind,se)^2,2,mean)
 
-T<-(1+1/M)*B + W
-combined.se <- sqrt(T)
-
-print("So the beta values are")
-combined.betas
-print("with standard errors of")
-combined.se
+cat("So the beta values are",betas2[1],"and", betas2[2],"with standard errors of",se2[1],"and",se2[2],"respectively")
 
 ```
 

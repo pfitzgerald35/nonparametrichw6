@@ -429,7 +429,7 @@ school.ew &lt;- school[take.em.out == FALSE,]</code></pre>
 ## 
 ## data:  school.ew$Handed and school.ew$Favorite_Season
 ## X-squared = 3.7881, df = 6, p-value = 0.7053</code></pre>
-<p>Given the p-value of this test, we fail to reject the null hypothesis. There is not sufficient evidence that Handedness and Favorite Season are independent.</p>
+<p>Given the p-value of this test, we fail to reject the null hypothesis. There is not sufficient evidence that Handedness and Favorite Season are dependent.</p>
 <p><strong>3.</strong></p>
 <pre class="r"><code>library(mice)</code></pre>
 <pre><code>## 
@@ -558,32 +558,23 @@ rats &lt;- mice(relevant.predictors, m = 5, method = &quot;cart&quot;)</code></p
 ##   5   4  school.Height_cm  school.Armspan_cm  school.Gender  school.Ageyears  school.Footlength_cm
 ##   5   5  school.Height_cm  school.Armspan_cm  school.Gender  school.Ageyears  school.Footlength_cm</code></pre>
 <pre><code>## Warning: Number of logged events: 125</code></pre>
-<pre class="r"><code>beta &lt;- list()
-se &lt;- list()
-for (i in 1:5){
-beta[[i]]&lt;-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,1]
-se[[i]]&lt;-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,2]
-}
+<pre class="r"><code>someImps &lt;- with(rats, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
 
-M&lt;-5
-combined.betas &lt;- apply(do.call(rbind,beta),2,mean)
+billiards &lt;- pool(someImps)
+billiards</code></pre>
+<pre><code>## Class: mipo    m = 5 
+##                            term m  estimate        ubar            b
+## 1                   (Intercept) 5 23.151100 5.526059488 2.5209098509
+## 2 as.numeric(school.Armspan_cm) 5  0.555428 0.001106438 0.0004231738
+##             t dfcom       df       riv    lambda       fmi
+## 1 8.551151309   498 29.06384 0.5474230 0.3537643 0.3940736
+## 2 0.001614247   498 36.12533 0.4589579 0.3145793 0.3496164</code></pre>
+<pre class="r"><code>betas &lt;- c(22.7178994,0.5612166)
+t &lt;- c(5.969260382,0.001148791)
+se &lt;- sqrt(t)
 
-B&lt;-apply(do.call(rbind,beta),2,var)
-W&lt;-apply(do.call(rbind,se)^2,2,mean)
-
-T&lt;-(1+1/M)*B + W
-combined.se &lt;- sqrt(T)
-
-print(&quot;So the beta values are&quot;)</code></pre>
-<pre><code>## [1] &quot;So the beta values are&quot;</code></pre>
-<pre class="r"><code>combined.betas</code></pre>
-<pre><code>##                   (Intercept) as.numeric(school.Armspan_cm) 
-##                    21.4224783                     0.5847097</code></pre>
-<pre class="r"><code>print(&quot;with standard errors of&quot;)</code></pre>
-<pre><code>## [1] &quot;with standard errors of&quot;</code></pre>
-<pre class="r"><code>combined.se</code></pre>
-<pre><code>##                   (Intercept) as.numeric(school.Armspan_cm) 
-##                    2.39089802                    0.03384502</code></pre>
+cat(&quot;So the beta values are&quot;,betas[1],&quot;and&quot;, betas[2],&quot;with standard errors of&quot;,se[1],&quot;and&quot;,se[2],&quot;respectively&quot;)</code></pre>
+<pre><code>## So the beta values are 22.7179 and 0.5612166 with standard errors of 2.443207 and 0.03389382 respectively</code></pre>
 <p><strong>4.</strong></p>
 <pre class="r"><code>rats2 &lt;- mice(relevant.predictors, m = 5, method = &quot;rf&quot;)</code></pre>
 <pre><code>## 
@@ -614,32 +605,23 @@ print(&quot;So the beta values are&quot;)</code></pre>
 ##   5   4  school.Height_cm  school.Armspan_cm  school.Gender  school.Ageyears  school.Footlength_cm
 ##   5   5  school.Height_cm  school.Armspan_cm  school.Gender  school.Ageyears  school.Footlength_cm</code></pre>
 <pre><code>## Warning: Number of logged events: 125</code></pre>
-<pre class="r"><code>beta &lt;- list()
-se &lt;- list()
-for (i in 1:5){
-beta[[i]]&lt;-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,1]
-se[[i]]&lt;-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,2]
-}
-
-M&lt;-5
-combined.betas &lt;- apply(do.call(rbind,beta),2,mean)
-
-B&lt;-apply(do.call(rbind,beta),2,var)
-W&lt;-apply(do.call(rbind,se)^2,2,mean)
-
-T&lt;-(1+1/M)*B + W
-combined.se &lt;- sqrt(T)
-
-print(&quot;So the beta values are&quot;)</code></pre>
-<pre><code>## [1] &quot;So the beta values are&quot;</code></pre>
-<pre class="r"><code>combined.betas</code></pre>
-<pre><code>##                   (Intercept) as.numeric(school.Armspan_cm) 
-##                    21.4224783                     0.5847097</code></pre>
-<pre class="r"><code>print(&quot;with standard errors of&quot;)</code></pre>
-<pre><code>## [1] &quot;with standard errors of&quot;</code></pre>
-<pre class="r"><code>combined.se</code></pre>
-<pre><code>##                   (Intercept) as.numeric(school.Armspan_cm) 
-##                    2.39089802                    0.03384502</code></pre>
+<pre class="r"><code>someImps2 &lt;- with(rats2, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
+billiards2 &lt;- pool(someImps2)
+billiards2</code></pre>
+<pre><code>## Class: mipo    m = 5 
+##                            term m   estimate        ubar            b
+## 1                   (Intercept) 5 23.5135633 5.681444791 0.6053979715
+## 2 as.numeric(school.Armspan_cm) 5  0.5498745 0.001130543 0.0001244718
+##             t dfcom       df       riv    lambda       fmi
+## 1 6.407922356   498 182.2435 0.1278685 0.1133718 0.1229443
+## 2 0.001279909   498 175.8335 0.1321189 0.1167006 0.1265790</code></pre>
+<pre class="r"><code>betas2 &lt;- c(24.229083,0.538372)
+t2 &lt;- c(6.533615322,0.001386197)
+se2 &lt;- sqrt(t2)
+se2</code></pre>
+<pre><code>## [1] 2.55609376 0.03723167</code></pre>
+<pre class="r"><code>cat(&quot;So the beta values are&quot;,betas2[1],&quot;and&quot;, betas2[2],&quot;with standard errors of&quot;,se2[1],&quot;and&quot;,se2[2],&quot;respectively&quot;)</code></pre>
+<pre><code>## So the beta values are 24.22908 and 0.538372 with standard errors of 2.556094 and 0.03723167 respectively</code></pre>
 <p><strong>5.</strong></p>
 <p>Check this github link to find my repository for this homework:</p>
 <p><a href="https://github.com/pfitzgerald35/nonparametrichw6" class="uri">https://github.com/pfitzgerald35/nonparametrichw6</a></p>
