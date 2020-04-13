@@ -1,0 +1,183 @@
+---
+title: "Homework 6"
+author: "Patrick Fitzgerald"
+date: "4/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+school <- read.csv("/Users/Patrick/Documents/School/STAT 488/ill_school_data.csv",header=TRUE, na.strings=c(""," ","NA"))
+
+summary(school)
+```
+
+**1.**
+
+This dataset is of results from a survey of Illinois high school students on various biological traits, such as height & weight, as well as various interests and behavioral choices, such as whether someone is vegetarian and what their preferred superpower would be.
+
+It seems interesting that many of the variables appear to be a factored response, most likely from multiple-choice style questions on the survey. This will need to be dealt with later.
+
+**2.**
+```{r}
+missing.hands <- (school$Handed == "")
+sum(missing.hands)
+missing.season <- (school$Favorite_Season == "")
+sum(missing.season == "TRUE")
+
+school.ew <- school
+
+school.ew <- school[take.em.out == FALSE,]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The missing values of these variables has been removed. Doing so would most likely cause issues, since 10% of the data is missing for favorite season, whereas only 2% is missing for handedness. So though in total only 10% of the data was removed (since some of the results removed may have had both values missing), that's still a decent portion of the data that is missing. However, since we are testing for independence, missing data isn't going to exactly provide much information (you need both pieces there to test for independence between the two variables) so removing the missing observations here shouldn't be too terrible, but there are definitely better ways to deal with this missing data.
+
+Since both variables are factored responses, a Chi-Square test of independence seems to be appropriate in this case.
+
+```{r}
+sum(school.ew$Handed=="Left-Handed"&school.ew$Favorite_Season=="Fall")
+sum(school.ew$Handed=="Left-Handed"&school.ew$Favorite_Season=="Winter")
+sum(school.ew$Handed=="Left-Handed"&school.ew$Favorite_Season=="Spring")
+sum(school.ew$Handed=="Left-Handed"&school.ew$Favorite_Season=="Summer")
+sum(school.ew$Handed=="Right-Handed"&school.ew$Favorite_Season=="Fall")
+sum(school.ew$Handed=="Right-Handed"&school.ew$Favorite_Season=="Winter")
+sum(school.ew$Handed=="Right-Handed"&school.ew$Favorite_Season=="Spring")
+sum(school.ew$Handed=="Right-Handed"&school.ew$Favorite_Season=="Summer")
+sum(school.ew$Handed=="Ambidextrous"&school.ew$Favorite_Season=="Fall")
+sum(school.ew$Handed=="Ambidextrous"&school.ew$Favorite_Season=="Winter")
+sum(school.ew$Handed=="Ambidextrous"&school.ew$Favorite_Season=="Spring")
+sum(school.ew$Handed=="Ambidextrous"&school.ew$Favorite_Season=="Summer")
+```
+So there seems to be a moderately appropriate number of observations in each cell (though since being ambidextrous is rare, there are fewer numbers present). So a Chi-Square test will be used.
+
+```{r}
+chisq.test(school.ew$Handed,school.ew$Favorite_Season)
+```
+
+Given the p-value of this test, we fail to reject the null hypothesis. There is not sufficient evidence that Handedness and Favorite Season are independent.
+
+
+
+**3.**
+```{r}
+library(mice)
+
+school$Height_cm
+school$Height_cm[7] <- 166
+school$Height_cm[118] <- 157.5
+school$Height_cm[188] <- NA
+school$Height_cm[285] <- 180
+school$Height_cm[288] <- 176
+school$Height_cm[332] <- 160
+school$Height_cm[school$Height_cm == "5"] <- 152.4
+school$Height_cm[school$Height_cm == "5'2"] <- 157.5
+school$Height_cm[school$Height_cm == "5.2"] <- 157.5
+school$Height_cm[school$Height_cm == "5'3"] <- 160
+school$Height_cm[school$Height_cm == "5'5"] <- 165.1
+school$Height_cm[school$Height_cm == "6'0"]
+school$Height_cm[school$Height_cm == "1.80"] <- 180
+
+school$Height_cm <- as.numeric(as.character(school$Height_cm))
+
+#Convert from inches to centimeters for the people who submitted inches
+min(school$Height_cm, na.rm=TRUE)
+for(i in seq(from = 50, to = 78, by = 0.1)){
+  school$Height_cm[school$Height_cm == i] <- i*2.54
+}
+
+#Convert from inches to centimeters for the people who submitted inches
+school$Armspan_cm <- as.numeric(as.character(school$Armspan_cm))
+for(i in seq(from = 40, to = 90, by = 0.1)){
+  school$Armspan_cm[school$Armspan_cm == i] <- i*2.54
+}
+
+
+school$Ageyears <- as.numeric(school$Ageyears)
+
+#Any height above 35 (size 18 shoes) was omitted
+school$Footlength_cm <- as.numeric(as.character(school$Footlength_cm))
+school$Footlength_cm[school$Footlength_cm > 35] <- NA
+
+relevant.predictors <- as.matrix(data.frame(school$Height_cm, school$Armspan_cm, school$Gender, school$Ageyears, school$Footlength_cm))
+
+rats <- mice(relevant.predictors, m = 5, method = "cart")
+
+beta <- list()
+se <- list()
+for (i in 1:5){
+beta[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,1]
+se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats[[1]])))$coefficients[,2]
+}
+
+M<-5
+combined.betas <- apply(do.call(rbind,betaList),2,mean)
+
+(B<-apply(do.call(rbind,betaList),2,var))
+(W<-apply(do.call(rbind,seList)^2,2,mean))
+
+T<-(1+1/M)*B + W
+combined.se <- sqrt(T)
+
+print("So the beta values are")
+combined.betas
+print("with standard errors of")
+combined.se
+```
+
+**4.**
+```{r}
+rats2 <- mice(relevant.predictors, m = 5, method = "rf")
+
+beta <- list()
+se <- list()
+for (i in 1:5){
+beta[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,1]
+se[[i]]<-summary(lm(as.numeric(school.Height_cm) ~ as.numeric(school.Armspan_cm), data = as.data.frame(rats2[[1]])))$coefficients[,2]
+}
+
+M<-5
+combined.betas <- apply(do.call(rbind,betaList),2,mean)
+
+B<-apply(do.call(rbind,betaList),2,var)
+W<-apply(do.call(rbind,seList)^2,2,mean)
+
+T<-(1+1/M)*B + W
+combined.se <- sqrt(T)
+
+print("So the beta values are")
+combined.betas
+print("with standard errors of")
+combined.se
+
+```
+
+
+**5.**
+
+Check this github link to find my repository for this homework: 
+
+https://github.com/pfitzgerald35/nonparametrichw6
+
+
+
+
+
+
