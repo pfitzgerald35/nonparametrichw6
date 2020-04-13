@@ -506,9 +506,7 @@ school$Height_cm[school$Height_cm == &quot;6'0&quot;]</code></pre>
 school$Height_cm &lt;- as.numeric(as.character(school$Height_cm))</code></pre>
 <pre><code>## Warning: NAs introduced by coercion</code></pre>
 <pre class="r"><code>#Convert from inches to centimeters for the people who submitted inches
-min(school$Height_cm, na.rm=TRUE)</code></pre>
-<pre><code>## [1] 10</code></pre>
-<pre class="r"><code>for(i in seq(from = 50, to = 78, by = 0.1)){
+for(i in seq(from = 50, to = 78, by = 0.1)){
   school$Height_cm[school$Height_cm == i] &lt;- i*2.54
 }
 
@@ -529,6 +527,7 @@ school$Footlength_cm &lt;- as.numeric(as.character(school$Footlength_cm))</code>
 
 relevant.predictors &lt;- as.matrix(data.frame(school$Height_cm, school$Armspan_cm, school$Gender, school$Ageyears, school$Footlength_cm))
 
+set.seed(1234)
 rats &lt;- mice(relevant.predictors, m = 5, method = &quot;cart&quot;)</code></pre>
 <pre><code>## 
 ##  iter imp variable
@@ -563,20 +562,21 @@ rats &lt;- mice(relevant.predictors, m = 5, method = &quot;cart&quot;)</code></p
 billiards &lt;- pool(someImps)
 billiards</code></pre>
 <pre><code>## Class: mipo    m = 5 
-##                            term m  estimate        ubar            b
-## 1                   (Intercept) 5 23.151100 5.526059488 2.5209098509
-## 2 as.numeric(school.Armspan_cm) 5  0.555428 0.001106438 0.0004231738
-##             t dfcom       df       riv    lambda       fmi
-## 1 8.551151309   498 29.06384 0.5474230 0.3537643 0.3940736
-## 2 0.001614247   498 36.12533 0.4589579 0.3145793 0.3496164</code></pre>
-<pre class="r"><code>betas &lt;- c(22.7178994,0.5612166)
-t &lt;- c(5.969260382,0.001148791)
+##                            term m   estimate        ubar            b
+## 1                   (Intercept) 5 22.9619247 5.569140639 1.272986e-01
+## 2 as.numeric(school.Armspan_cm) 5  0.5602302 0.001111234 1.880403e-05
+##             t dfcom       df        riv     lambda        fmi
+## 1 5.721898927   498 444.5305 0.02742942 0.02669713 0.03104679
+## 2 0.001133799   498 463.8130 0.02030611 0.01990198 0.02410109</code></pre>
+<pre class="r"><code>betas &lt;- c(22.9619247,0.5602302)
+t &lt;- c(5.7218988927,0.001133799)
 se &lt;- sqrt(t)
 
 cat(&quot;So the beta values are&quot;,betas[1],&quot;and&quot;, betas[2],&quot;with standard errors of&quot;,se[1],&quot;and&quot;,se[2],&quot;respectively&quot;)</code></pre>
-<pre><code>## So the beta values are 22.7179 and 0.5612166 with standard errors of 2.443207 and 0.03389382 respectively</code></pre>
+<pre><code>## So the beta values are 22.96192 and 0.5602302 with standard errors of 2.392049 and 0.03367193 respectively</code></pre>
 <p><strong>4.</strong></p>
-<pre class="r"><code>rats2 &lt;- mice(relevant.predictors, m = 5, method = &quot;rf&quot;)</code></pre>
+<pre class="r"><code>set.seed(1234)
+rats2 &lt;- mice(relevant.predictors, m = 5, method = &quot;rf&quot;)</code></pre>
 <pre><code>## 
 ##  iter imp variable
 ##   1   1  school.Height_cm  school.Armspan_cm  school.Gender  school.Ageyears  school.Footlength_cm
@@ -610,18 +610,18 @@ billiards2 &lt;- pool(someImps2)
 billiards2</code></pre>
 <pre><code>## Class: mipo    m = 5 
 ##                            term m   estimate        ubar            b
-## 1                   (Intercept) 5 23.5135633 5.681444791 0.6053979715
-## 2 as.numeric(school.Armspan_cm) 5  0.5498745 0.001130543 0.0001244718
+## 1                   (Intercept) 5 23.7594629 5.676514701 1.1780202344
+## 2 as.numeric(school.Armspan_cm) 5  0.5468722 0.001136851 0.0002404018
 ##             t dfcom       df       riv    lambda       fmi
-## 1 6.407922356   498 182.2435 0.1278685 0.1133718 0.1229443
-## 2 0.001279909   498 175.8335 0.1321189 0.1167006 0.1265790</code></pre>
-<pre class="r"><code>betas2 &lt;- c(24.229083,0.538372)
-t2 &lt;- c(6.533615322,0.001386197)
+## 1 7.090138982   498 80.28173 0.2490303 0.1993789 0.2186057
+## 2 0.001425333   498 78.31623 0.2537556 0.2023964 0.2220137</code></pre>
+<pre class="r"><code>betas2 &lt;- c(23.7594629,0.5468722)
+t2 &lt;- c(7.090138982,0.001425333)
 se2 &lt;- sqrt(t2)
 se2</code></pre>
-<pre><code>## [1] 2.55609376 0.03723167</code></pre>
+<pre><code>## [1] 2.66273149 0.03775358</code></pre>
 <pre class="r"><code>cat(&quot;So the beta values are&quot;,betas2[1],&quot;and&quot;, betas2[2],&quot;with standard errors of&quot;,se2[1],&quot;and&quot;,se2[2],&quot;respectively&quot;)</code></pre>
-<pre><code>## So the beta values are 24.22908 and 0.538372 with standard errors of 2.556094 and 0.03723167 respectively</code></pre>
+<pre><code>## So the beta values are 23.75946 and 0.5468722 with standard errors of 2.662731 and 0.03775358 respectively</code></pre>
 <p><strong>5.</strong></p>
 <p>Check this github link to find my repository for this homework:</p>
 <p><a href="https://github.com/pfitzgerald35/nonparametrichw6" class="uri">https://github.com/pfitzgerald35/nonparametrichw6</a></p>

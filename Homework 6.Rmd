@@ -86,7 +86,6 @@ school$Height_cm[school$Height_cm == "1.80"] <- 180
 school$Height_cm <- as.numeric(as.character(school$Height_cm))
 
 #Convert from inches to centimeters for the people who submitted inches
-min(school$Height_cm, na.rm=TRUE)
 for(i in seq(from = 50, to = 78, by = 0.1)){
   school$Height_cm[school$Height_cm == i] <- i*2.54
 }
@@ -106,6 +105,7 @@ school$Footlength_cm[school$Footlength_cm > 35] <- NA
 
 relevant.predictors <- as.matrix(data.frame(school$Height_cm, school$Armspan_cm, school$Gender, school$Ageyears, school$Footlength_cm))
 
+set.seed(1234)
 rats <- mice(relevant.predictors, m = 5, method = "cart")
 
 someImps <- with(rats, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
@@ -113,8 +113,8 @@ someImps <- with(rats, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(schoo
 billiards <- pool(someImps)
 billiards
 
-betas <- c(22.7178994,0.5612166)
-t <- c(5.969260382,0.001148791)
+betas <- c(22.9619247,0.5602302)
+t <- c(5.7218988927,0.001133799)
 se <- sqrt(t)
 
 cat("So the beta values are",betas[1],"and", betas[2],"with standard errors of",se[1],"and",se[2],"respectively")
@@ -122,14 +122,15 @@ cat("So the beta values are",betas[1],"and", betas[2],"with standard errors of",
 
 **4.**
 ```{r}
+set.seed(1234)
 rats2 <- mice(relevant.predictors, m = 5, method = "rf")
 
 someImps2 <- with(rats2, exp = lm(as.numeric(school.Height_cm) ~  as.numeric(school.Armspan_cm)))
 billiards2 <- pool(someImps2)
 billiards2
 
-betas2 <- c(24.229083,0.538372)
-t2 <- c(6.533615322,0.001386197)
+betas2 <- c(23.7594629,0.5468722)
+t2 <- c(7.090138982,0.001425333)
 se2 <- sqrt(t2)
 se2
 
